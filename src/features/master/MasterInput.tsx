@@ -16,38 +16,29 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
   const [inputValue, setInputValue] = useState('');
   const [similarMasters, setSimilarMasters] = useState<{ name: string; similarity: number }[]>([]);
 
-  // Инициализация значения
+  // Инициализация значения — просто показываем то, что в value
   useEffect(() => {
     if (value) {
-      const master = MASTERS.find(m => m.id === value);
-      if (master) {
-        setInputValue(master.name);
-      } else {
-        // Если masterId не из списка MASTERS, ищем в истории
-        const historyMaster = mastersHistory.find(m => m.id === value);
-        if (historyMaster) {
-          setInputValue(historyMaster.name);
-        }
-      }
+      setInputValue(value);
     }
-  }, [value, mastersHistory]);
+  }, [value]);
 
   const saveMaster = (name: string) => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
-    const master = MASTERS.find(m => m.name === trimmedName);
-    if (master) {
-      onChange(master.id);
-    } else {
-      // Новый мастер - создаём
+    // Сохраняем имя мастера в историю, если его там нет
+    const existingMaster = mastersHistory.find(m => m.name === trimmedName);
+    if (!existingMaster) {
       const newMaster = {
         id: Date.now().toString(),
         name: trimmedName
       };
       onAddMaster(newMaster);
-      onChange(newMaster.id);
     }
+
+    // Передаём имя напрямую в форму
+    onChange(trimmedName);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

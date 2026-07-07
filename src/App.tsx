@@ -1,6 +1,6 @@
 // App.tsx
 import { useState, useEffect } from 'react';
-import { WORK_TYPES, EQUIPMENT_TYPES, MASTERS, type Master, type WorkTypeId, type EquipmentEntry, type Welder, type Installer, type Report } from './types';
+import { WORK_TYPES, EQUIPMENT_TYPES, type Master, type WorkTypeId, type EquipmentEntry, type Welder, type Installer, type Report } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useReports, useObjectsHistory, useMasters } from './hooks/useLocalStorage';
 import { ObjectInput } from './features/object/ObjectInput';
@@ -145,7 +145,7 @@ function App() {
       return [
         r.date,
         r.object,
-        MASTERS.find(m => m.id === r.masterId)?.name || r.masterId,
+        r.masterId,
         ...WORK_TYPES.map(w => r.works[w.id] || 0),
         r.additionalWork || '',
         equipmentTypes,
@@ -337,7 +337,7 @@ function App() {
               <button onClick={() => setShowPreview(false)} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
             </div>
             <div className="p-4">
-              <PreviewCard form={form} mastersHistory={masters} />
+              <PreviewCard form={form} />
             </div>
           </div>
         </div>
