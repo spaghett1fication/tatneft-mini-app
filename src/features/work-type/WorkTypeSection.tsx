@@ -47,17 +47,17 @@ export function WorkTypeSection({
         <div className="space-y-2 mt-3">
           {WORK_TYPES.map((work) => (
             <div key={work.id} className="flex items-center gap-2">
-              <span className="w-1/2 text-base">{work.name}</span>
-              <LargeInput
+              <span className="flex-1 text-base">{work.name}</span>
+              <input
                 type="number"
                 placeholder="0"
                 value={works[work.id] || ''}
                 onChange={(e) => handleWorkChange(work.id, e.target.value)}
-                className="flex-1"
+                className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                 min="0"
                 step="0.1"
               />
-              <span className="text-gray-500 text-sm w-12">{work.unit}</span>
+              <span className="text-gray-500 text-sm w-10">{work.unit}</span>
             </div>
           ))}
         </div>
