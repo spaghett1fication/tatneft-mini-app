@@ -33,7 +33,7 @@ export function PreviewCard({ form }: PreviewCardProps) {
       });
   };
 
-  const hasData = form.object || getWorksList().length > 0 || form.equipment.length > 0;
+  const hasData = form.object || form.masterId || getWorksList().length > 0 || form.equipment.length > 0 || form.welders.length > 0 || form.installers.length > 0;
 
   if (!hasData) {
     return (
