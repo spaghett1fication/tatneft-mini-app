@@ -19,11 +19,6 @@ export function PreviewCard({ form }: PreviewCardProps) {
     return date || new Date().toISOString().split('T')[0];
   };
 
-  const getMasterName = () => {
-    // Просто возвращаем masterId — теперь это имя мастера
-    return form.masterId || '—';
-  };
-
   const getWorksList = () => {
     return Object.entries(form.works)
       .filter(([_, qty]) => qty > 0)
@@ -50,7 +45,7 @@ export function PreviewCard({ form }: PreviewCardProps) {
       <div className="space-y-2 text-base">
         <div><strong>Дата:</strong> {formatDate(form.date)}</div>
         <div><strong>Объект:</strong> {form.object || '—'}</div>
-        <div><strong>Мастер:</strong> {getMasterName()}</div>
+        <div><strong>Мастер:</strong> {form.masterId || '—'}</div>
 
         {getWorksList().length > 0 && (
           <div className="pt-2 border-t">
