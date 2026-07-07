@@ -1,6 +1,6 @@
 // App.tsx
-import React, { useState, useEffect } from 'react';
-import { WORK_TYPES, EQUIPMENT_TYPES, MASTERS, Master, WorkTypeId, EquipmentTypeId, Welder } from './types';
+import { useState, useEffect } from 'react';
+import { WORK_TYPES, EQUIPMENT_TYPES, MASTERS, type Master, type WorkTypeId, type EquipmentEntry, type Welder, type Installer, type Report } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useReports, useObjectsHistory, useMasters } from './hooks/useLocalStorage';
 import { ObjectInput } from './features/object/ObjectInput';
@@ -20,26 +20,23 @@ function App() {
   const { objects, setObjects } = useObjectsHistory();
   const { masters, setMasters } = useMasters();
 
-  // Состояние админ-панели
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Состояние формы
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     object: '',
     masterId: '',
     works: {} as Record<WorkTypeId, number>,
     additionalWork: '',
-    equipmentHours: {} as Partial<Record<EquipmentTypeId, number>>,
+    equipment: [] as EquipmentEntry[],
     welders: [] as Welder[],
-    installerHours: 0
+    installers: [] as Installer[]
   });
 
-  // Режим редактирования
   const [editId, setEditId] = useState<string | null>(null);
   const [showStatus, setShowStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Автоскрытие статуса
   useEffect(() => {
     if (showStatus) {
       const timer = setTimeout(() => setShowStatus(null), 3000);
@@ -47,16 +44,14 @@ function App() {
     }
   }, [showStatus]);
 
-  // Валидация
   const validateForm = (): string | null => {
     if (!form.date) return 'Укажите дату';
     if (!form.object.trim()) return 'Введите объект';
     if (!form.masterId) return 'Выберите мастера';
 
-    const hasWork = Object.values(form.works).some(v => v > 0) || form.additionalWork.trim();
-    if (!hasWork) return 'Укажите хотя бы один вид работ';
+    // Разрешаем сводку без работ, сварщиков и монтажников
+    // Только проверяем заполненность, если они есть
 
-    // Валидация сварщиков
     for (let i = 0; i < form.welders.length; i++) {
       const welder = form.welders[i];
       if (!welder.name.trim()) {
@@ -67,10 +62,26 @@ function App() {
       }
     }
 
+    for (let i = 0; i < form.installers.length; i++) {
+      const installer = form.installers[i];
+      if (!installer.name.trim()) {
+        return `Укажите фамилию монтажника #${i + 1}`;
+      }
+      if (installer.hours <= 0) {
+        return `Укажите часы для монтажника "${installer.name}"`;
+      }
+    }
+
+    for (let i = 0; i < form.equipment.length; i++) {
+      const eq = form.equipment[i];
+      if (eq.hours <= 0) {
+        return `Укажите часы для техники #${i + 1}`;
+      }
+    }
+
     return null;
   };
 
-  // Сохранить
   const handleSave = () => {
     const error = validateForm();
     if (error) {
@@ -83,10 +94,7 @@ function App() {
       id: editId || Date.now().toString(),
       timestamp: new Date().toISOString(),
       userId: user?.id?.toString() || 'demo',
-      ...form,
-      works: form.works as Record<WorkTypeId, number>,
-      equipmentHours: form.equipmentHours as Partial<Record<EquipmentTypeId, number>>,
-      welders: form.welders
+      ...form
     };
 
     if (editId) {
@@ -96,40 +104,43 @@ function App() {
       setReports([...reports, report]);
     }
 
-    // Сброс формы
     setForm({
       date: new Date().toISOString().split('T')[0],
       object: '',
       masterId: '',
       works: {} as Record<WorkTypeId, number>,
       additionalWork: '',
-      equipmentHours: {} as Partial<Record<EquipmentTypeId, number>>,
+      equipment: [],
       welders: [],
-      installerHours: 0
+      installers: []
     });
 
-    setShowStatus({ message: '✓ Отчёт сохранён', type: 'success' });
+    setShowStatus({ message: '✓ Сводка сохранена', type: 'success' });
     haptic('success');
   };
 
-  // Экспорт в Excel
   const handleExport = () => {
-    // Получаем только свои отчёты (если не админ)
-    const myReports = reports; // Упрощено
-
     const headers = [
       'Дата', 'Объект', 'Мастер',
       ...WORK_TYPES.map(w => w.column),
       'Доп. (вне списка)',
-      ...EQUIPMENT_TYPES.map(e => e.column),
+      'Техника (тип)', 'Гос номер', 'Часы техники',
       'Сварщики (чел)', 'Сварщики ФИО', 'Сварщики (ч)',
-      'Монтажник (ч)'
+      'Монтажники (чел)', 'Монтажники ФИО', 'Монтажники (ч)'
     ];
 
-    const rows = myReports.map(r => {
+    const rows = reports.map(r => {
       const weldersCount = r.welders?.length || 0;
       const weldersNames = r.welders?.map(w => w.name).join(', ') || '';
       const weldersTotalHours = r.welders?.reduce((sum, w) => sum + w.hours, 0) || 0;
+
+      const installersCount = r.installers?.length || 0;
+      const installersNames = r.installers?.map(i => i.name).join(', ') || '';
+      const installersTotalHours = r.installers?.reduce((sum, i) => sum + i.hours, 0) || 0;
+
+      const equipmentTypes = r.equipment?.map(e => EQUIPMENT_TYPES.find(t => t.id === e.type)?.name || e.type).join('; ') || '';
+      const equipmentPlates = r.equipment?.map(e => e.plateNumber).join('; ') || '';
+      const equipmentHours = r.equipment?.reduce((sum, e) => sum + e.hours, 0) || 0;
 
       return [
         r.date,
@@ -137,11 +148,15 @@ function App() {
         MASTERS.find(m => m.id === r.masterId)?.name || r.masterId,
         ...WORK_TYPES.map(w => r.works[w.id] || 0),
         r.additionalWork || '',
-        ...EQUIPMENT_TYPES.map(e => r.equipmentHours[e.id] || 0),
+        equipmentTypes,
+        equipmentPlates,
+        equipmentHours,
         weldersCount,
         weldersNames,
         weldersTotalHours,
-        r.installerHours
+        installersCount,
+        installersNames,
+        installersTotalHours
       ];
     });
 
@@ -152,33 +167,30 @@ function App() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `tatneft_reports_${form.date}.csv`;
+    link.download = `tatneft_svod_${form.date}.csv`;
     link.click();
 
     haptic('success');
   };
 
-  // Удаление отчета
   const handleDeleteReport = (id: string) => {
     setReports(reports.filter(r => r.id !== id));
     if (editId === id) {
       setEditId(null);
-      // Сброс формы
       setForm({
         date: new Date().toISOString().split('T')[0],
         object: '',
         masterId: '',
         works: {} as Record<WorkTypeId, number>,
         additionalWork: '',
-        equipmentHours: {} as Partial<Record<EquipmentTypeId, number>>,
+        equipment: [],
         welders: [],
-        installerHours: 0
+        installers: []
       });
     }
     haptic('success');
   };
 
-  // Редактирование отчета из админ-панели
   const handleEditFromAdmin = (report: Report) => {
     setEditId(report.id);
     setForm({
@@ -187,9 +199,9 @@ function App() {
       masterId: report.masterId,
       works: report.works,
       additionalWork: report.additionalWork || '',
-      equipmentHours: report.equipmentHours,
+      equipment: report.equipment || [],
       welders: report.welders || [],
-      installerHours: report.installerHours
+      installers: report.installers || []
     });
     setShowAdmin(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -197,26 +209,34 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Хедер */}
       <header className="bg-white shadow-sm p-4">
         <h1 className="text-2xl font-bold text-center text-gray-800">
-          Отчёт о работе
+          Сводка о работе
         </h1>
-        <div className="flex justify-center gap-4 mt-2">
-          <LargeButton variant="secondary" onClick={() => setShowAdmin(true)} className="w-auto px-6">
-            Админ ({reports.length})
-          </LargeButton>
-          <LargeButton variant="success" onClick={handleExport} className="w-auto px-6">
-            Экспорт в Excel
-          </LargeButton>
+        <div className="flex justify-center gap-3 mt-3">
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+          >
+            Архив ({reports.length})
+          </button>
+          <button
+            onClick={() => setShowPreview(true)}
+            className="px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 rounded text-blue-700"
+          >
+            Предпросмотр
+          </button>
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 text-sm bg-green-100 hover:bg-green-200 rounded text-green-700"
+          >
+            Экспорт
+          </button>
         </div>
       </header>
 
-      {/* Основной контент */}
-      <main className="flex flex-col lg:flex-row gap-6 p-4 max-w-7xl mx-auto">
-        {/* Форма слева */}
-        <div className="flex-1 bg-white rounded-lg p-6 shadow-sm">
-          {/* Статус */}
+      <main className="p-4 max-w-2xl mx-auto">
+        <div className="bg-white rounded-lg p-6 shadow-sm">
           {showStatus && (
             <div className={`
               mb-4 p-4 rounded-lg text-center font-medium
@@ -226,17 +246,16 @@ function App() {
             </div>
           )}
 
-          {/* Дата */}
           <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Дата *</label>
             <LargeInput
+              label="Дата"
               type="date"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
             />
           </div>
 
-          {/* Объект */}
           <div className="mb-6">
             <ObjectInput
               value={form.object}
@@ -247,24 +266,24 @@ function App() {
                   setObjects([obj, ...objects.slice(0, 49)]);
                 }
               }}
+              required
             />
           </div>
 
-          {/* Мастер */}
           <div className="mb-6">
             <MasterInput
               value={form.masterId}
               onChange={(masterId) => setForm({ ...form, masterId })}
               mastersHistory={masters}
               onAddMaster={(newMaster: Master) => {
-                if (!masters.some(m => m.name === newMaster.name)) {
+                if (!masters.includes(newMaster.name)) {
                   setMasters([newMaster.name, ...masters.slice(0, 19)]);
                 }
               }}
+              required
             />
           </div>
 
-          {/* Работы */}
           <div className="mb-6">
             <WorkTypeSection
               works={form.works}
@@ -274,15 +293,13 @@ function App() {
             />
           </div>
 
-          {/* Техника */}
           <div className="mb-6">
             <EquipmentSection
-              equipmentHours={form.equipmentHours}
-              onChange={(equipmentHours) => setForm({ ...form, equipmentHours })}
+              equipment={form.equipment}
+              onChange={(equipment) => setForm({ ...form, equipment })}
             />
           </div>
 
-          {/* Сварщики */}
           <div className="mb-6">
             <WeldersSection
               welders={form.welders}
@@ -290,62 +307,19 @@ function App() {
             />
           </div>
 
-          {/* Монтажники */}
           <div className="mb-6">
             <InstallersSection
-              hours={form.installerHours}
-              onChange={(installerHours) => setForm({ ...form, installerHours })}
+              installers={form.installers}
+              onChange={(installers) => setForm({ ...form, installers })}
             />
           </div>
 
-          {/* Кнопка сохранить */}
           <LargeButton variant="primary" onClick={handleSave}>
-            {editId ? 'Обновить отчёт' : 'Сохранить отчёт'}
+            {editId ? 'Обновить сводку' : 'Сохранить сводку'}
           </LargeButton>
-        </div>
-
-        {/* Превью справа */}
-        <div className="w-full lg:w-96">
-          <PreviewCard form={form} />
-
-          {/* Сохранённые отчёты */}
-          {reports.length > 0 && (
-            <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Сохранённые ({reports.length})</h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {reports.map(report => (
-                  <div
-                    key={report.id}
-                    className="p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-                    onClick={() => {
-                      setEditId(report.id);
-                      setForm({
-                        date: report.date,
-                        object: report.object,
-                        masterId: report.masterId,
-                        works: report.works,
-                        additionalWork: report.additionalWork || '',
-                        equipmentHours: report.equipmentHours,
-                        welders: report.welders || [],
-                        installerHours: report.installerHours
-                      });
-                    }}
-                  >
-                    <div className="font-medium">
-                      {report.date} • {report.object}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {MASTERS.find(m => m.id === report.masterId)?.name || report.masterId}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
-      {/* Админ-панель */}
       {showAdmin && (
         <AdminPanel
           reports={reports}
@@ -353,6 +327,20 @@ function App() {
           onEditReport={handleEditFromAdmin}
           onClose={() => setShowAdmin(false)}
         />
+      )}
+
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowPreview(false)}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Предпросмотр сводки</h2>
+              <button onClick={() => setShowPreview(false)} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+            </div>
+            <div className="p-4">
+              <PreviewCard form={form} />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

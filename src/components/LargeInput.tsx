@@ -6,27 +6,28 @@ interface LargeInputProps extends React.InputHTMLAttributes<HTMLInputElement | H
   error?: string;
   suggestions?: string[];
   onSuggestionClick?: (suggestion: string) => void;
+  required?: boolean;
 }
 
 export const LargeInput = forwardRef<
   HTMLInputElement | HTMLSelectElement,
   LargeInputProps
->(({ label, error, suggestions, onSuggestionClick, className = '', ...props }, ref) => {
+>(({ label, error, suggestions, onSuggestionClick, required, className = '', ...props }, ref) => {
   const [showSuggestions, setShowSuggestions] = React.useState(false);
 
   return (
     <div className="relative">
       {label && (
         <label className="block text-lg font-medium mb-2 text-gray-700">
-          {label}
+          {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
       <input
         ref={ref as any}
         className={`
-          w-full px-4 py-4 text-lg rounded-lg border-2 border-gray-300
+          w-full px-4 py-4 text-lg rounded-lg border-2
           focus:border-blue-500 focus:outline-none bg-white
-          ${error ? 'border-red-500' : ''}
+          ${error ? 'border-red-500' : required ? 'border-blue-400' : 'border-gray-300'}
           ${className}
         `}
         {...props}

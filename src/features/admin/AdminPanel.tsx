@@ -1,6 +1,7 @@
 // features/admin/AdminPanel.tsx
-import React, { useState } from 'react';
-import { Report, WORK_TYPES, EQUIPMENT_TYPES, MASTERS } from '../../types';
+import { useState } from 'react';
+import type { Report } from '../../types';
+import { MASTERS } from '../../types';
 import { LargeButton } from '../../components/LargeButton';
 
 interface AdminPanelProps {
@@ -27,16 +28,15 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
     return Object.values(report.works).reduce((sum, val) => sum + val, 0);
   };
 
-  const getTotalEquipment = (report: Report) => {
-    return Object.values(report.equipmentHours).reduce((sum, val) => sum + val, 0);
+  const getTotalEquipmentHours = (report: Report) => {
+    return report.equipment?.reduce((sum, e) => sum + e.hours, 0) || 0;
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Хедер */}
         <div className="p-6 border-b flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">Панель администратора</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Архив сводок</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
@@ -45,7 +45,6 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
           </button>
         </div>
 
-        {/* Фильтр */}
         <div className="p-4 border-b">
           <input
             type="text"
@@ -55,15 +54,14 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
             className="w-full px-4 py-3 text-lg rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
           />
           <div className="mt-2 text-sm text-gray-600">
-            Всего отчётов: {reports.length} | Показано: {filteredReports.length}
+            Всего сводок: {reports.length} | Показано: {filteredReports.length}
           </div>
         </div>
 
-        {/* Список отчётов */}
         <div className="flex-1 overflow-y-auto p-4">
           {filteredReports.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              Отчёты не найдены
+              Сводки не найдены
             </div>
           ) : (
             <div className="space-y-3">
@@ -92,7 +90,7 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm('Удалить этот отчёт?')) {
+                          if (confirm('Удалить эту сводку?')) {
                             onDeleteReport(report.id);
                           }
                         }}
@@ -103,7 +101,6 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
                     </div>
                   </div>
 
-                  {/* Краткая статистика */}
                   <div className="grid grid-cols-4 gap-4 pt-3 border-t text-sm">
                     <div>
                       <div className="text-gray-500">Работы</div>
@@ -111,17 +108,15 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
                     </div>
                     <div>
                       <div className="text-gray-500">Техника</div>
-                      <div className="font-semibold">{getTotalEquipment(report).toFixed(1)} ч</div>
+                      <div className="font-semibold">{getTotalEquipmentHours(report).toFixed(1)} ч</div>
                     </div>
                     <div>
                       <div className="text-gray-500">Сварщики</div>
                       <div className="font-semibold">{report.welders?.length || 0} чел.</div>
                     </div>
                     <div>
-                      <div className="text-gray-500">Создан</div>
-                      <div className="font-semibold">
-                        {new Date(report.timestamp).toLocaleString('ru-RU')}
-                      </div>
+                      <div className="text-gray-500">Монтажники</div>
+                      <div className="font-semibold">{report.installers?.length || 0} чел.</div>
                     </div>
                   </div>
                 </div>
@@ -130,7 +125,6 @@ export function AdminPanel({ reports, onDeleteReport, onEditReport, onClose }: A
           )}
         </div>
 
-        {/* Футер */}
         <div className="p-4 border-t">
           <LargeButton variant="secondary" onClick={onClose}>
             Закрыть

@@ -2,7 +2,7 @@
 
 // Расстояние Левенштейна
 export function levenshteinDistance(str1: string, str2: string): number {
-  const matrix: number[] = [];
+  const matrix: number[][] = [];
 
   for (let i = 0; i <= str2.length; i++) {
     matrix[i] = [i];

@@ -1,7 +1,7 @@
 // features/master/MasterInput.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LargeInput } from '../../components/LargeInput';
-import { MASTERS, Master } from '../../types';
+import { MASTERS, type Master } from '../../types';
 import { findSimilarNames } from '../../utils/fuzzySearch';
 
 interface MasterInputProps {
@@ -9,11 +9,11 @@ interface MasterInputProps {
   onChange: (masterId: string) => void;
   mastersHistory: string[];
   onAddMaster: (master: Master) => void;
+  required?: boolean;
 }
 
-export function MasterInput({ value, onChange, mastersHistory, onAddMaster }: MasterInputProps) {
+export function MasterInput({ value, onChange, mastersHistory, onAddMaster, required }: MasterInputProps) {
   const [inputValue, setInputValue] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [similarMasters, setSimilarMasters] = useState<{ name: string; similarity: number }[]>([]);
 
   // Инициализация значения
@@ -33,10 +33,8 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster }: Ma
       const allNames = [...MASTERS.map(m => m.name), ...mastersHistory];
       const similar = findSimilarNames(val, allNames);
       setSimilarMasters(similar);
-      setShowSuggestions(true);
     } else {
       setSimilarMasters([]);
-      setShowSuggestions(false);
     }
   };
 
@@ -54,20 +52,18 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster }: Ma
       onAddMaster(newMaster);
       onChange(newMaster.id);
     }
-    setShowSuggestions(false);
   };
 
   return (
     <div className="relative">
       <LargeInput
-        label="Мастер *"
+        label="Мастер"
         placeholder="Газимзянов М.Г."
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={() => similarMasters.length > 0 && setShowSuggestions(true)}
         suggestions={similarMasters.map(s => s.name)}
         onSuggestionClick={handleSelectMaster}
-        required
+        required={required}
       />
     </div>
   );

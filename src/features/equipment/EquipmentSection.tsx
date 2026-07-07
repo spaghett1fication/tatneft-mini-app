@@ -1,48 +1,120 @@
 // features/equipment/EquipmentSection.tsx
-import React from 'react';
 import { LargeInput } from '../../components/LargeInput';
 import { LargeButton } from '../../components/LargeButton';
-import { EQUIPMENT_TYPES, EquipmentTypeId } from '../../types';
+import { EQUIPMENT_TYPES, type EquipmentTypeId, type EquipmentEntry } from '../../types';
 import { FormSection } from '../../components/FormSection';
 
 interface EquipmentSectionProps {
-  equipmentHours: Partial<Record<EquipmentTypeId, number>>;
-  onChange: (equipment: Partial<Record<EquipmentTypeId, number>>) => void;
+  equipment: EquipmentEntry[];
+  onChange: (equipment: EquipmentEntry[]) => void;
 }
 
-export function EquipmentSection({ equipmentHours, onChange }: EquipmentSectionProps) {
-  const handleHoursChange = (equipId: EquipmentTypeId, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    if (numValue > 0) {
-      onChange({ ...equipmentHours, [equipId]: numValue });
-    } else {
-      const newEquip = { ...equipmentHours };
-      delete newEquip[equipId];
-      onChange(newEquip);
-    }
+export function EquipmentSection({ equipment, onChange }: EquipmentSectionProps) {
+  const addEquipment = () => {
+    onChange([...equipment, { type: EQUIPMENT_TYPES[0].id, hours: 0, plateNumber: '' }]);
   };
 
-  const activeEquipment = Object.entries(equipmentHours).filter(([_, hours]) => hours > 0);
+  const updateEquipment = (index: number, field: keyof EquipmentEntry, value: string | number) => {
+    const updated = [...equipment];
+    updated[index] = { ...updated[index], [field]: value };
+    onChange(updated);
+  };
+
+  const removeEquipment = (index: number) => {
+    onChange(equipment.filter((_, i) => i !== index));
+  };
+
+  const formatPlateNumber = (value: string): string => {
+    // Убираем все кроме букв, цифр и пробелов
+    let cleaned = value.toUpperCase().replace(/[^А-ЯA-Z0-9\s]/g, '');
+
+    // Если только цифры - максимум 4 символа
+    if (/^\d+$/.test(cleaned)) {
+      return cleaned.slice(0, 4);
+    }
+
+    // Формат АБ123В116 (2 буквы, 3 цифры, 1 буква, пробел, 3 цифры)
+    // Удаляем пробелы для обработки
+    cleaned = cleaned.replace(/\s/g, '');
+
+    let result = '';
+    let letterCount = 0;
+    let digitCount = 0;
+
+    for (let i = 0; i < cleaned.length && result.length < 12; i++) {
+      const char = cleaned[i];
+      const isDigit = /\d/.test(char);
+      const isLetter = /[А-ЯA-Z]/.test(char);
+
+      if (result.length < 2 && isLetter) {
+        result += char;
+        letterCount++;
+      } else if (result.length >= 2 && result.length < 5 && isDigit) {
+        result += char;
+        digitCount++;
+      } else if (result.length === 5 && isLetter) {
+        result += char + ' ';
+      } else if (result.length > 6 && isDigit && result.length < 10) {
+        result += char;
+      }
+    }
+
+    return result.trim();
+  };
 
   return (
     <FormSection title="Техника">
       <div className="space-y-3">
-        {EQUIPMENT_TYPES.map((equip) => (
-          <div key={equip.id} className="flex items-center gap-2">
-            <span className="w-2/5 text-base">{equip.name}</span>
-            <LargeInput
-              type="number"
-              placeholder="0"
-              value={equipmentHours[equip.id] || ''}
-              onChange={(e) => handleHoursChange(equip.id, e.target.value)}
-              className="flex-1"
-              min="0"
-              max="24"
-              step="0.5"
-            />
-            <span className="text-gray-500 text-sm w-12">ч</span>
+        {equipment.map((item, index) => (
+          <div key={index} className="p-3 bg-gray-50 rounded space-y-2">
+            <div className="flex items-center gap-2">
+              <select
+                value={item.type}
+                onChange={(e) => updateEquipment(index, 'type', e.target.value as EquipmentTypeId)}
+                className="flex-1 px-3 py-2 text-base border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              >
+                {EQUIPMENT_TYPES.map((equip) => (
+                  <option key={equip.id} value={equip.id}>
+                    {equip.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => removeEquipment(index)}
+                className="text-red-500 hover:text-red-700 px-2 py-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <LargeInput
+                  type="text"
+                  placeholder="Гос номер (АБ123В 116 или 1234)"
+                  value={item.plateNumber}
+                  onChange={(e) => updateEquipment(index, 'plateNumber', formatPlateNumber(e.target.value))}
+                />
+              </div>
+              <div className="w-20">
+                <LargeInput
+                  type="number"
+                  placeholder="0"
+                  value={item.hours || ''}
+                  onChange={(e) => updateEquipment(index, 'hours', parseFloat(e.target.value) || 0)}
+                  min="0"
+                  max="24"
+                  step="0.5"
+                />
+              </div>
+              <span className="text-gray-500 text-sm">ч</span>
+            </div>
           </div>
         ))}
+
+        <LargeButton variant="secondary" onClick={addEquipment}>
+          + Добавить технику
+        </LargeButton>
       </div>
     </FormSection>
   );

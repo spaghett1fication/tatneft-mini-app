@@ -1,9 +1,8 @@
 // features/welders/WeldersSection.tsx
-import React from 'react';
 import { LargeInput } from '../../components/LargeInput';
 import { LargeButton } from '../../components/LargeButton';
 import { FormSection } from '../../components/FormSection';
-import { Welder } from '../../types';
+import type { Welder } from '../../types';
 
 interface WeldersSectionProps {
   welders: Welder[];

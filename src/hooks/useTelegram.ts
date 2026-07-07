@@ -47,7 +47,7 @@ export function useTelegram() {
       setUser(webApp.initDataUnsafe?.user || null);
     } else {
       // Демо-режим
-      setUser({ id: 'demo_user', first_name: 'Демо' });
+      setUser({ id: 99999, first_name: 'Демо' });
     }
   }, []);
 

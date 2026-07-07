@@ -1,5 +1,6 @@
 // hooks/useLocalStorage.ts
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import type { Report } from '../types';
 
 const REPORTS_KEY = 'tatneft_reports';
 const OBJECTS_KEY = 'tatneft_objects_history';
@@ -44,5 +45,3 @@ export function useMasters() {
   const [masters, setMasters] = useLocalStorage<string[]>(MASTERS_KEY, []);
   return { masters, setMasters };
 }
-
-import { Report } from '../types';

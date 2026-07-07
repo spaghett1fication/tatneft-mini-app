@@ -63,11 +63,25 @@ export const MASTERS = [
 // Типы
 export type WorkTypeId = typeof WORK_TYPES[number]['id'];
 export type EquipmentTypeId = typeof EQUIPMENT_TYPES[number]['id'];
+export type Master = { id: string; name: string };
 
 // Сварщик
 export interface Welder {
   name: string;
   hours: number;
+}
+
+// Монтажник
+export interface Installer {
+  name: string;
+  hours: number;
+}
+
+// Техника с гос номером
+export interface EquipmentEntry {
+  type: EquipmentTypeId;
+  hours: number;
+  plateNumber: string; // Гос номер
 }
 
 // Данные отчёта
@@ -87,14 +101,14 @@ export interface Report {
   // Доп. работа вне списка
   additionalWork?: string;
 
-  // Техника (ключ-значение: тип техники -> часы)
-  equipmentHours: Partial<Record<EquipmentTypeId, number>>;
+  // Техника (массив с гос номерами)
+  equipment: EquipmentEntry[];
 
   // Сварщики (детальная информация)
   welders: Welder[];
 
-  // Монтажники (только часы)
-  installerHours: number;
+  // Монтажники (несколько монтажников)
+  installers: Installer[];
 }
 
 // Состояние формы
@@ -104,9 +118,9 @@ export interface FormState {
   masterId: string;
   works: Record<WorkTypeId, number>;
   additionalWork: string;
-  equipmentHours: Partial<Record<EquipmentTypeId, number>>;
+  equipment: EquipmentEntry[];
   welders: Welder[];
-  installerHours: number;
+  installers: Installer[];
 }
 
 // Ошибки валидации

@@ -1,5 +1,5 @@
 // features/object/ObjectInput.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LargeInput } from '../../components/LargeInput';
 
 interface ObjectInputProps {
@@ -7,9 +7,10 @@ interface ObjectInputProps {
   onChange: (value: string) => void;
   objectsHistory: string[];
   onAddObject: (object: string) => void;
+  required?: boolean;
 }
 
-export function ObjectInput({ value, onChange, objectsHistory, onAddObject }: ObjectInputProps) {
+export function ObjectInput({ value, onChange, objectsHistory, onAddObject, required }: ObjectInputProps) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -36,14 +37,14 @@ export function ObjectInput({ value, onChange, objectsHistory, onAddObject }: Ob
 
   return (
     <LargeInput
-      label="Объект *"
+      label="Объект"
       placeholder="КНС 171, ЛДНС с УПС..."
       value={value}
       onChange={(e) => onChange(e.target.value)}
       suggestions={suggestions}
       onSuggestionClick={handleSelectSuggestion}
       onBlur={handleBlur}
-      required
+      required={required}
     />
   );
 }
