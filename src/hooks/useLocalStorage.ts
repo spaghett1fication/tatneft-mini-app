@@ -42,6 +42,6 @@ export function useObjectsHistory() {
 }
 
 export function useMasters() {
-  const [masters, setMasters] = useLocalStorage<string[]>(MASTERS_KEY, []);
+  const [masters, setMasters] = useLocalStorage<import('../types').Master[]>(MASTERS_KEY, []);
   return { masters, setMasters };
 }

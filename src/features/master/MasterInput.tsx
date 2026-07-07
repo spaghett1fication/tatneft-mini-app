@@ -7,7 +7,7 @@ import { findSimilarNames } from '../../utils/fuzzySearch';
 interface MasterInputProps {
   value: string;
   onChange: (masterId: string) => void;
-  mastersHistory: string[];
+  mastersHistory: Master[];
   onAddMaster: (master: Master) => void;
   required?: boolean;
 }
@@ -23,22 +23,45 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
       if (master) {
         setInputValue(master.name);
       } else {
-        // Если masterId не из списка MASTERS, это новый мастер
-        const historyMaster = mastersHistory.find(m => m === value);
+        // Если masterId не из списка MASTERS, ищем в истории
+        const historyMaster = mastersHistory.find(m => m.id === value);
         if (historyMaster) {
-          setInputValue(historyMaster);
+          setInputValue(historyMaster.name);
         }
       }
     }
   }, [value, mastersHistory]);
 
+  const saveMaster = (name: string) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    const master = MASTERS.find(m => m.name === trimmedName);
+    if (master) {
+      onChange(master.id);
+    } else {
+      // Новый мастер - создаём
+      const newMaster = {
+        id: Date.now().toString(),
+        name: trimmedName
+      };
+      onAddMaster(newMaster);
+      onChange(newMaster.id);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
 
+    // Сохраняем мастера сразу при вводе
+    if (val.trim().length >= 3) {
+      saveMaster(val);
+    }
+
     // Ищем по fuzzy
     if (val.length >= 2) {
-      const allNames = [...MASTERS.map(m => m.name), ...mastersHistory];
+      const allNames = [...MASTERS.map(m => m.name), ...mastersHistory.map(m => m.name)];
       const similar = findSimilarNames(val, allNames);
       setSimilarMasters(similar);
     } else {
@@ -47,39 +70,14 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
   };
 
   const handleSelectMaster = (masterName: string) => {
-    const master = MASTERS.find(m => m.name === masterName);
-    if (master) {
-      onChange(master.id);
-      setInputValue(master.name);
-    } else {
-      // Новый мастер - создаём
-      const newMaster = {
-        id: Date.now().toString(),
-        name: masterName
-      };
-      onAddMaster(newMaster);
-      onChange(newMaster.id);
-      setInputValue(masterName);
-    }
+    setInputValue(masterName);
+    saveMaster(masterName);
     setSimilarMasters([]);
   };
 
   const handleBlur = () => {
-    // Сохраняем мастера при уходе с поля
-    if (inputValue.trim()) {
-      const master = MASTERS.find(m => m.name === inputValue.trim());
-      if (master) {
-        onChange(master.id);
-      } else {
-        // Новый мастер
-        const newMaster = {
-          id: Date.now().toString(),
-          name: inputValue.trim()
-        };
-        onAddMaster(newMaster);
-        onChange(newMaster.id);
-      }
-    }
+    // Дополнительное сохранение при уходе с поля
+    saveMaster(inputValue);
   };
 
   return (

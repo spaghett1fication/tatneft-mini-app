@@ -276,8 +276,8 @@ function App() {
               onChange={(masterId) => setForm({ ...form, masterId })}
               mastersHistory={masters}
               onAddMaster={(newMaster: Master) => {
-                if (!masters.includes(newMaster.name)) {
-                  setMasters([newMaster.name, ...masters.slice(0, 19)]);
+                if (!masters.find(m => m.id === newMaster.id)) {
+                  setMasters([newMaster, ...masters.slice(0, 19)]);
                 }
               }}
               required
@@ -337,7 +337,7 @@ function App() {
               <button onClick={() => setShowPreview(false)} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
             </div>
             <div className="p-4">
-              <PreviewCard form={form} />
+              <PreviewCard form={form} mastersHistory={masters} />
             </div>
           </div>
         </div>

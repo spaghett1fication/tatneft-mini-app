@@ -1,5 +1,5 @@
 // components/PreviewCard.tsx
-import { WORK_TYPES, EQUIPMENT_TYPES, MASTERS, type Welder, type Installer, type EquipmentEntry } from '../types';
+import { WORK_TYPES, EQUIPMENT_TYPES, MASTERS, type Welder, type Installer, type EquipmentEntry, type Master } from '../types';
 
 interface PreviewCardProps {
   form: {
@@ -12,16 +12,25 @@ interface PreviewCardProps {
     welders: Welder[];
     installers: Installer[];
   };
+  mastersHistory?: Master[];
 }
 
-export function PreviewCard({ form }: PreviewCardProps) {
+export function PreviewCard({ form, mastersHistory = [] }: PreviewCardProps) {
   const formatDate = (date: string) => {
     return date || new Date().toISOString().split('T')[0];
   };
 
   const getMasterName = () => {
+    // Сначала ищем в предустановленных мастерах
     const master = MASTERS.find(m => m.id === form.masterId);
-    return master?.name || form.masterId || '—';
+    if (master) return master.name;
+
+    // Затем в пользовательских мастерах
+    const customMaster = mastersHistory.find(m => m.id === form.masterId);
+    if (customMaster) return customMaster.name;
+
+    // Если не найдено, показываем сам masterId или прочерк
+    return form.masterId || '—';
   };
 
   const getWorksList = () => {
