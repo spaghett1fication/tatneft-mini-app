@@ -45,10 +45,8 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
     const val = e.target.value;
     setInputValue(val);
 
-    // Сохраняем мастера сразу при вводе
-    if (val.trim().length >= 3) {
-      saveMaster(val);
-    }
+    // Сохраняем имя мастера напрямую при каждом изменении
+    onChange(val);
 
     // Ищем по fuzzy
     if (val.length >= 2) {
