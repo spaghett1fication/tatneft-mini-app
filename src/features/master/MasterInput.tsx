@@ -20,9 +20,17 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
   useEffect(() => {
     if (value) {
       const master = MASTERS.find(m => m.id === value);
-      if (master) setInputValue(master.name);
+      if (master) {
+        setInputValue(master.name);
+      } else {
+        // Если masterId не из списка MASTERS, это новый мастер
+        const historyMaster = mastersHistory.find(m => m === value);
+        if (historyMaster) {
+          setInputValue(historyMaster);
+        }
+      }
     }
-  }, [value]);
+  }, [value, mastersHistory]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -51,6 +59,26 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
       };
       onAddMaster(newMaster);
       onChange(newMaster.id);
+      setInputValue(masterName);
+    }
+    setSimilarMasters([]);
+  };
+
+  const handleBlur = () => {
+    // Сохраняем мастера при уходе с поля
+    if (inputValue.trim()) {
+      const master = MASTERS.find(m => m.name === inputValue.trim());
+      if (master) {
+        onChange(master.id);
+      } else {
+        // Новый мастер
+        const newMaster = {
+          id: Date.now().toString(),
+          name: inputValue.trim()
+        };
+        onAddMaster(newMaster);
+        onChange(newMaster.id);
+      }
     }
   };
 
@@ -61,6 +89,7 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
         placeholder="Газимзянов М.Г."
         value={inputValue}
         onChange={handleInputChange}
+        onBlur={handleBlur}
         suggestions={similarMasters.map(s => s.name)}
         onSuggestionClick={handleSelectMaster}
         required={required}

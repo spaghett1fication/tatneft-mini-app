@@ -35,8 +35,11 @@ export function WorkTypeSection({
         className="w-full flex items-center justify-between p-3 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
       >
         <span className="text-base font-medium">
-          {isExpanded ? '▼ Свернуть список' : '▶ Развернуть список'}
-          {filledWorksCount > 0 && ` (заполнено: ${filledWorksCount})`}
+          {isExpanded ? 'Свернуть список' : 'Развернуть список'}
+          {filledWorksCount > 0 && ` — заполнено: ${filledWorksCount}`}
+        </span>
+        <span className="text-xl text-gray-500">
+          {isExpanded ? '−' : '+'}
         </span>
       </button>
 
