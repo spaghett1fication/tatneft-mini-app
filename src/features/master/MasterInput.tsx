@@ -73,7 +73,7 @@ export function MasterInput({ value, onChange, mastersHistory, onAddMaster, requ
     <div className="relative">
       <LargeInput
         label="Мастер"
-        placeholder="Газимзянов М.Г."
+        placeholder="Иванов И.И."
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
