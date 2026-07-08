@@ -1,3 +1,91 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== Строгая корпоративная тёмная тема (Татнефть) ===== */
+@layer components {
+  /* Каркас приложения */
+  .app-shell {
+    @apply bg-slate-900 text-slate-100 min-h-screen;
+  }
+  .app-header {
+    @apply bg-slate-950 border-b-2 border-emerald-700 shadow-md;
+  }
+  .app-card {
+    @apply bg-slate-800 border border-slate-700 rounded-md shadow-lg;
+  }
+
+  /* Заголовки разделов — строгие, верхний регистр, разделитель */
+  .section-title {
+    @apply text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3 border-b border-slate-700 pb-2;
+  }
+
+  /* Поля ввода */
+  .field-label {
+    @apply block text-base font-medium mb-2 text-slate-200;
+  }
+  .field-input {
+    @apply w-full px-4 py-4 text-lg rounded-md border-2 bg-slate-900 border-slate-600 text-white
+           placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors;
+  }
+  .field-input-compact {
+    @apply w-full px-3 py-3 text-base rounded-md border-2 bg-slate-900 border-slate-600 text-white
+           placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors;
+  }
+  .field-select {
+    @apply w-full px-3 py-3 text-base rounded-md border-2 bg-slate-900 border-slate-600 text-white
+           focus:border-emerald-500 focus:outline-none transition-colors;
+  }
+
+  /* Кнопки */
+  .btn {
+    @apply w-full px-4 py-4 text-lg font-semibold rounded-md transition-colors duration-200;
+  }
+  .btn-primary {
+    @apply bg-emerald-700 hover:bg-emerald-600 text-white;
+  }
+  .btn-secondary {
+    @apply bg-slate-700 hover:bg-slate-600 text-slate-100;
+  }
+  .btn-danger {
+    @apply bg-red-700 hover:bg-red-600 text-white;
+  }
+  .btn-success {
+    @apply bg-emerald-700 hover:bg-emerald-600 text-white;
+  }
+
+  /* Вложенные карточки (техника, сварщики, монтажники) */
+  .sub-card {
+    @apply bg-slate-900 border border-slate-700 rounded-md p-4 space-y-3;
+  }
+
+  /* Небольшие кнопки-переключатели в шапке */
+  .pill {
+    @apply px-4 py-2 text-sm font-medium rounded-md border transition-colors;
+  }
+  .pill-neutral {
+    @apply bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700;
+  }
+  .pill-accent {
+    @apply bg-emerald-800/40 hover:bg-emerald-800 text-emerald-300 border-emerald-700;
+  }
+  .pill-green {
+    @apply bg-emerald-800/40 hover:bg-emerald-800 text-emerald-300 border-emerald-700;
+  }
+
+  /* Выпадающие подсказки */
+  .suggestions {
+    @apply absolute z-10 mt-1 w-full bg-slate-800 border border-slate-600 rounded-md shadow-xl max-h-48 overflow-y-auto;
+  }
+  .suggestion-item {
+    @apply px-4 py-3 text-lg hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0 text-slate-100;
+  }
+
+  /* Статусные сообщения */
+  .status-success {
+    @apply mb-4 p-4 rounded-md text-center font-medium bg-emerald-900/60 text-emerald-200 border border-emerald-700;
+  }
+  .status-error {
+    @apply mb-4 p-4 rounded-md text-center font-medium bg-red-900/60 text-red-200 border border-red-700;
+  }
+}

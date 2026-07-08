@@ -32,13 +32,13 @@ export function WeldersSection({ welders, onChange }: WeldersSectionProps) {
     <FormSection title="Сварщики">
       <div className="space-y-4">
         {welders.map((welder, index) => (
-          <div key={index} className="border rounded-lg p-4 bg-gray-50">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-base font-medium">Сварщик #{index + 1}</span>
+          <div key={index} className="sub-card">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-base font-medium text-slate-100">Сварщик #{index + 1}</span>
               <button
                 type="button"
                 onClick={() => removeWelder(index)}
-                className="text-red-600 hover:text-red-800 px-3 py-1 rounded"
+                className="text-red-400 hover:text-red-300 px-3 py-1 rounded"
               >
                 Удалить
               </button>
@@ -53,7 +53,7 @@ export function WeldersSection({ welders, onChange }: WeldersSectionProps) {
               />
 
               <div className="flex items-center gap-3">
-                <span className="text-base w-24">Часы</span>
+                <span className="text-base w-24 text-slate-300">Часы</span>
                 <LargeInput
                   type="number"
                   placeholder="0"
@@ -64,7 +64,7 @@ export function WeldersSection({ welders, onChange }: WeldersSectionProps) {
                   max="24"
                   step="0.5"
                 />
-                <span className="text-gray-500 text-sm w-8">ч</span>
+                <span className="text-slate-400 text-sm w-8">ч</span>
               </div>
             </div>
           </div>

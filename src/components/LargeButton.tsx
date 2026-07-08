@@ -13,20 +13,19 @@ export function LargeButton({
   children,
   ...props
 }: LargeButtonProps) {
-  const variants = {
-    primary: 'bg-blue-500 hover:bg-blue-600 text-white',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-    danger: 'bg-red-500 hover:bg-red-600 text-white',
-    success: 'bg-green-500 hover:bg-green-600 text-white'
+  const variants: Record<string, string> = {
+    primary: 'btn-primary',
+    secondary: 'btn-secondary',
+    danger: 'btn-danger',
+    success: 'btn-success'
   };
 
   return (
     <button
       className={`
-        ${fullWidth ? 'w-full' : ''}
-        px-4 py-4 text-lg font-medium rounded-lg
+        btn
         ${variants[variant]}
-        transition-colors duration-200
+        ${fullWidth ? 'w-full' : 'w-auto'}
         ${className}
       `}
       {...props}

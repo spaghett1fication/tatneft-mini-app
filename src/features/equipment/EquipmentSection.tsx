@@ -66,12 +66,12 @@ export function EquipmentSection({ equipment, onChange }: EquipmentSectionProps)
     <FormSection title="Техника">
       <div className="space-y-3">
         {equipment.map((item, index) => (
-          <div key={index} className="p-3 bg-gray-50 rounded space-y-2">
+          <div key={index} className="sub-card">
             <div className="flex items-center gap-2">
               <select
                 value={item.type}
                 onChange={(e) => updateEquipment(index, 'type', e.target.value as EquipmentTypeId)}
-                className="flex-1 px-3 py-2 text-base border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                className="field-select flex-1"
               >
                 {EQUIPMENT_TYPES.map((equip) => (
                   <option key={equip.id} value={equip.id}>
@@ -81,7 +81,7 @@ export function EquipmentSection({ equipment, onChange }: EquipmentSectionProps)
               </select>
               <button
                 onClick={() => removeEquipment(index)}
-                className="text-red-500 hover:text-red-700 px-2 py-1"
+                className="text-red-400 hover:text-red-300 px-2 py-1"
               >
                 ✕
               </button>
@@ -96,7 +96,7 @@ export function EquipmentSection({ equipment, onChange }: EquipmentSectionProps)
                   onChange={(e) => updateEquipment(index, 'plateNumber', formatPlateNumber(e.target.value))}
                 />
               </div>
-              <div className="w-20">
+              <div className="w-24">
                 <LargeInput
                   type="number"
                   placeholder="0"
@@ -107,7 +107,7 @@ export function EquipmentSection({ equipment, onChange }: EquipmentSectionProps)
                   step="0.5"
                 />
               </div>
-              <span className="text-gray-500 text-sm">ч</span>
+              <span className="text-slate-400 text-sm">ч</span>
             </div>
           </div>
         ))}

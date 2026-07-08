@@ -10,9 +10,9 @@ interface FormSectionProps {
 export function FormSection({ title, children, required = false }: FormSectionProps) {
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">
+      <h2 className="section-title">
         {title}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-400 ml-1">*</span>}
       </h2>
       <div className="space-y-3">
         {children}

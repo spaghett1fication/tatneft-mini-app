@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { WORK_TYPES, EQUIPMENT_TYPES, type Master, type WorkTypeId, type EquipmentEntry, type Welder, type Installer, type Report } from './types';
 import { useTelegram } from './hooks/useTelegram';
 import { useReports, useObjectsHistory, useMasters } from './hooks/useLocalStorage';
+import { formatReportText } from './utils/formatReport';
 import { ObjectInput } from './features/object/ObjectInput';
 import { MasterInput } from './features/master/MasterInput';
 import { WorkTypeSection } from './features/work-type/WorkTypeSection';
@@ -15,13 +16,14 @@ import { PreviewCard } from './components/PreviewCard';
 import { AdminPanel } from './features/admin/AdminPanel';
 
 function App() {
-  const { user, haptic } = useTelegram();
+  const { user, haptic, sendData, isTelegram } = useTelegram();
   const { reports, setReports } = useReports();
   const { objects, setObjects } = useObjectsHistory();
   const { masters, setMasters } = useMasters();
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showSendPreview, setShowSendPreview] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -48,9 +50,6 @@ function App() {
     if (!form.date) return 'Укажите дату';
     if (!form.object.trim()) return 'Введите объект';
     if (!form.masterId) return 'Выберите мастера';
-
-    // Разрешаем сводку без работ, сварщиков и монтажников
-    // Только проверяем заполненность, если они есть
 
     for (let i = 0; i < form.welders.length; i++) {
       const welder = form.welders[i];
@@ -82,6 +81,19 @@ function App() {
     return null;
   };
 
+  const resetForm = () => {
+    setForm({
+      date: new Date().toISOString().split('T')[0],
+      object: '',
+      masterId: '',
+      works: {} as Record<WorkTypeId, number>,
+      additionalWork: '',
+      equipment: [],
+      welders: [],
+      installers: []
+    });
+  };
+
   const handleSave = () => {
     const error = validateForm();
     if (error) {
@@ -104,16 +116,7 @@ function App() {
       setReports([...reports, report]);
     }
 
-    setForm({
-      date: new Date().toISOString().split('T')[0],
-      object: '',
-      masterId: '',
-      works: {} as Record<WorkTypeId, number>,
-      additionalWork: '',
-      equipment: [],
-      welders: [],
-      installers: []
-    });
+    resetForm();
 
     setShowStatus({ message: '✓ Сводка сохранена', type: 'success' });
     haptic('success');
@@ -173,20 +176,32 @@ function App() {
     haptic('success');
   };
 
+  const handleSendToBot = () => {
+    const error = validateForm();
+    if (error) {
+      setShowStatus({ message: error, type: 'error' });
+      haptic('error');
+      return;
+    }
+
+    const text = formatReportText(form);
+
+    if (isTelegram) {
+      // Отправляем сводку в бот. Telegram после этого закроет мини-апп,
+      // а бот получит данные и запишет сводку в чат.
+      sendData(text);
+      haptic('success');
+    } else {
+      // Демо-режим: просто показываем сформированный текст для копирования.
+      setShowSendPreview(text);
+    }
+  };
+
   const handleDeleteReport = (id: string) => {
     setReports(reports.filter(r => r.id !== id));
     if (editId === id) {
       setEditId(null);
-      setForm({
-        date: new Date().toISOString().split('T')[0],
-        object: '',
-        masterId: '',
-        works: {} as Record<WorkTypeId, number>,
-        additionalWork: '',
-        equipment: [],
-        welders: [],
-        installers: []
-      });
+      resetForm();
     }
     haptic('success');
   };
@@ -208,27 +223,27 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm p-4">
-        <h1 className="text-2xl font-bold text-center text-gray-800">
-          Сводка о работе
+    <div className="app-shell">
+      <header className="app-header p-4">
+        <h1 className="text-2xl font-bold text-center text-slate-100 tracking-wide">
+          СВОДКА О РАБОТЕ
         </h1>
-        <div className="flex justify-center gap-3 mt-3">
+        <div className="flex justify-center gap-3 mt-3 flex-wrap">
           <button
             onClick={() => setShowAdmin(true)}
-            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+            className="pill pill-neutral"
           >
             Архив ({reports.length})
           </button>
           <button
             onClick={() => setShowPreview(true)}
-            className="px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 rounded text-blue-700"
+            className="pill pill-accent"
           >
             Предпросмотр
           </button>
           <button
             onClick={handleExport}
-            className="px-4 py-2 text-sm bg-green-100 hover:bg-green-200 rounded text-green-700"
+            className="pill pill-green"
           >
             Экспорт
           </button>
@@ -236,12 +251,9 @@ function App() {
       </header>
 
       <main className="p-4 max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="app-card p-6">
           {showStatus && (
-            <div className={`
-              mb-4 p-4 rounded-lg text-center font-medium
-              ${showStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-            `}>
+            <div className={showStatus.type === 'success' ? 'status-success' : 'status-error'}>
               {showStatus.message}
             </div>
           )}
@@ -314,9 +326,15 @@ function App() {
             />
           </div>
 
-          <LargeButton variant="primary" onClick={handleSave}>
-            {editId ? 'Обновить сводку' : 'Сохранить сводку'}
-          </LargeButton>
+          <div className="space-y-3">
+            <LargeButton variant="primary" onClick={handleSave}>
+              {editId ? 'Обновить сводку' : 'Сохранить сводку'}
+            </LargeButton>
+
+            <LargeButton variant="success" onClick={handleSendToBot}>
+              📤 Отправить в чат бота
+            </LargeButton>
+          </div>
         </div>
       </main>
 
@@ -329,15 +347,46 @@ function App() {
         />
       )}
 
+      {/* Предпросмотр сводки */}
       {showPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowPreview(false)}>
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Предпросмотр сводки</h2>
-              <button onClick={() => setShowPreview(false)} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50" onClick={() => setShowPreview(false)}>
+          <div className="app-card max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-slate-950 border-b border-slate-700 p-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-slate-100">Предпросмотр сводки</h2>
+              <button onClick={() => setShowPreview(false)} className="text-2xl text-slate-400 hover:text-slate-200">×</button>
             </div>
             <div className="p-4">
               <PreviewCard form={form} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Окно отправки (демо-режим, вне Telegram) */}
+      {showSendPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+          <div className="app-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-slate-950 border-b border-slate-700 p-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-slate-100">Сводка для отправки</h2>
+              <button onClick={() => setShowSendPreview(null)} className="text-2xl text-slate-400 hover:text-slate-200">×</button>
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-slate-400">
+                В Telegram эта сводка автоматически отправляется боту и пишется в чат.
+                В демо-режиме скопируйте текст вручную:
+              </p>
+              <pre className="bg-slate-900 border border-slate-700 rounded-md p-4 text-sm text-slate-100 whitespace-pre-wrap font-mono">
+{showSendPreview}
+              </pre>
+              <LargeButton
+                variant="secondary"
+                onClick={() => {
+                  navigator.clipboard?.writeText(showSendPreview);
+                  setShowStatus({ message: '✓ Текст скопирован', type: 'success' });
+                }}
+              >
+                Копировать текст
+              </LargeButton>
             </div>
           </div>
         </div>

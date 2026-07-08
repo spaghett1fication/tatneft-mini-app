@@ -32,13 +32,13 @@ export function WorkTypeSection({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-slate-800 border border-slate-700 rounded-md hover:bg-slate-700 transition-colors"
       >
-        <span className="text-base font-medium">
+        <span className="text-base font-medium text-slate-100">
           {isExpanded ? 'Свернуть список' : 'Развернуть список'}
           {filledWorksCount > 0 && ` — заполнено: ${filledWorksCount}`}
         </span>
-        <span className="text-xl text-gray-500">
+        <span className="text-xl text-slate-400">
           {isExpanded ? '−' : '+'}
         </span>
       </button>
@@ -47,24 +47,24 @@ export function WorkTypeSection({
         <div className="space-y-2 mt-3">
           {WORK_TYPES.map((work) => (
             <div key={work.id} className="flex items-center gap-2">
-              <span className="flex-1 text-base">{work.name}</span>
+              <span className="flex-1 text-base text-slate-200">{work.name}</span>
               <input
                 type="number"
                 placeholder="0"
                 value={works[work.id] || ''}
                 onChange={(e) => handleWorkChange(work.id, e.target.value)}
-                className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="field-input-compact w-24"
                 min="0"
                 step="0.1"
               />
-              <span className="text-gray-500 text-sm w-10">{work.unit}</span>
+              <span className="text-slate-400 text-sm w-10">{work.unit}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Доп. работа вне списка */}
-      <div className="pt-4 border-t mt-4">
+      <div className="pt-4 border-t border-slate-700 mt-4">
         <LargeInput
           label="Доп. работа (вне списка)"
           placeholder="Описание других работ"

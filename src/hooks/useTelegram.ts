@@ -14,6 +14,8 @@ interface TelegramWebApp {
   };
   expand: () => void;
   ready: () => void;
+  close: () => void;
+  sendData: (data: string) => void;
   HapticFeedback?: {
     impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
     notificationOccurred: (type: 'success' | 'error' | 'warning') => void;
@@ -37,6 +39,7 @@ declare global {
 export function useTelegram() {
   const [tg, setTg] = useState<TelegramWebApp | null>(null);
   const [user, setUser] = useState<TelegramUser | null>(null);
+  const [isTelegram, setIsTelegram] = useState(false);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -44,9 +47,10 @@ export function useTelegram() {
       webApp.expand();
       webApp.ready();
       setTg(webApp);
+      setIsTelegram(true);
       setUser(webApp.initDataUnsafe?.user || null);
     } else {
-      // Демо-режим
+      // Демо-режим (вне Telegram)
       setUser({ id: 99999, first_name: 'Демо' });
     }
   }, []);
@@ -61,5 +65,14 @@ export function useTelegram() {
     }
   };
 
-  return { user, haptic, isReady: !!user };
+  // Отправка данных в бот (web_app_data). После вызова Telegram закрывает мини-апп.
+  const sendData = (data: string) => {
+    if (tg?.sendData) {
+      tg.sendData(data);
+      return true;
+    }
+    return false;
+  };
+
+  return { user, haptic, sendData, isTelegram, isReady: !!user };
 }

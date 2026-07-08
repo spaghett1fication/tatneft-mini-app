@@ -28,7 +28,7 @@ export function InstallersSection({ installers, onChange }: InstallersSectionPro
     <FormSection title="Монтажники">
       <div className="space-y-3">
         {installers.map((installer, index) => (
-          <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded">
+          <div key={index} className="sub-card flex items-center gap-2">
             <div className="flex-1">
               <LargeInput
                 type="text"
@@ -48,10 +48,10 @@ export function InstallersSection({ installers, onChange }: InstallersSectionPro
                 step="0.5"
               />
             </div>
-            <span className="text-gray-500 text-sm">ч</span>
+            <span className="text-slate-400 text-sm">ч</span>
             <button
               onClick={() => removeInstaller(index)}
-              className="text-red-500 hover:text-red-700 px-2 py-1"
+              className="text-red-400 hover:text-red-300 px-2 py-1"
             >
               ✕
             </button>
