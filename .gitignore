@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Debug/build artifacts — не должны попадать в master
+standalone.html
+standalone/
+test_*.mjs
